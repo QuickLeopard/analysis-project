@@ -48,20 +48,63 @@
 //  -- Error
 //   --- нет сети
 //   --- отказано в доступе
+
+use std::fs::File;
+
 fn main() {
     println!("Placeholder для экспериментов с cli");
 
-    let parsing_demo = r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#.to_string();
-    let announcements = analysis::parse::just_parse_anouncements(parsing_demo).unwrap();
-    println!("demo-parsed: {:?}", announcements);
-
     let args = std::env::args().collect::<Vec<_>>();
-    let filename = args[1].clone();
-    println!("Trying opening file '{}' from directory '{}'", filename, std::env::current_dir().unwrap().to_string_lossy());
-    let file: std::rc::Rc<std::cell::RefCell<Box<dyn analysis::MyReader>>> = std::rc::Rc::new(std::cell::RefCell::new(Box::new(std::fs::File::open(filename).unwrap())));
 
-    let logs = analysis::read_log(file.clone(), analysis::READ_MODE_ALL, vec![]);
-    println!("got logs:");
-    logs.iter().for_each(|parsed| println!("  {:?}", parsed));
+    if args.len() < 2 {
+        println!("Usage: {} <filename>", args[0]);
+        return;
+    }
+
+    let filename = args[1].clone();
+    let folder = std::env::current_dir().unwrap();
+
+    println!(
+        "Trying opening file '{}' from directory '{}'",
+        filename,
+        folder.to_string_lossy()
+    );
+    let file: Box<dyn analysis::MyReader> = Box::new(File::open(filename).unwrap());
+
+    let logs = analysis::read_log(file, analysis::ReadMode::All, vec![]);
+    let output = logs
+        .iter()
+        .map(|log| format!("{:?}", log))
+        .collect::<Vec<String>>()
+        .join("\n");
+    println!("Got logs:\n{}", output);
+    //logs.iter().for_each(|parsed| println!("  {:?}", parsed));
 }
 
+#[cfg(test)]
+mod tests {
+    use analysis::parse::{Announcements, UserBacket};
+
+    use analysis::parse::*;
+
+    #[test]
+    fn parse_test() {
+        let parsing_demo =
+            r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#
+                .to_string();
+        let announcements = just_parse_anouncements(parsing_demo).unwrap();
+        assert!(
+            announcements
+                == (
+                    "".to_string(),
+                    Announcements::from(vec![UserBackets {
+                        user_id: "Bob".to_string(),
+                        backets: vec![Backet {
+                            asset_id: "milk".to_string(),
+                            count: 3,
+                        }]
+                    }])
+                )
+        );
+    }
+}
