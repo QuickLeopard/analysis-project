@@ -49,29 +49,31 @@
 //   --- нет сети
 //   --- отказано в доступе
 
+use std::error::Error;
 use std::fs::File;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("Placeholder для экспериментов с cli");
 
     let args = std::env::args().collect::<Vec<_>>();
 
     if args.len() < 2 {
         println!("Usage: {} <filename>", args[0]);
-        return;
+        return Err("Not enough arguments".into());
     }
 
-    let filename = args[1].clone();
-    let folder = std::env::current_dir().unwrap();
+    let filename = &args[1];
+    let folder = std::env::current_dir()?;
 
     println!(
         "Trying opening file '{}' from directory '{}'",
         filename,
         folder.to_string_lossy()
     );
-    let file: Box<dyn analysis::MyReader> = Box::new(File::open(filename).unwrap());
 
-    let logs = analysis::read_log(file, analysis::ReadMode::All, vec![]);
+    let file = File::open(filename)?;
+
+    let logs = analysis::read_log(Box::new(file), analysis::ReadMode::All, vec![]);
     let output = logs
         .iter()
         .map(|log| format!("{:?}", log))
@@ -79,11 +81,12 @@ fn main() {
         .join("\n");
     println!("Got logs:\n{}", output);
     //logs.iter().for_each(|parsed| println!("  {:?}", parsed));
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use analysis::parse_old::{Announcements, UserBacket};
+    use analysis::parse::types::domain::*;
 
     use analysis::parse_old::*;
 
@@ -91,7 +94,7 @@ mod tests {
     fn parse_test() {
         let parsing_demo =
             r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#;
-        let announcements = just_parse(parsing_demo).unwrap();
+        let announcements = just_parse::<Announcements>(parsing_demo).unwrap();
         assert!(
             announcements
                 == (
