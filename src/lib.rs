@@ -85,18 +85,10 @@ pub fn read_log(input: Box<dyn MyReader>, mode: ReadMode, request_ids: Vec<u32>)
             ),
         };
 
-        if request_ids.is_empty() || {
-            let mut request_id_found = false;
-            for request_id in &request_ids {
-                if *request_id == log.request_id {
-                    request_id_found = true;
-                    break;
-                }
-            }
-            request_id_found
-        }
-        // подсказка: лучше match
-        && mode_match
+        if request_ids.is_empty()
+            || request_ids.contains(&log.request_id)
+            // подсказка: лучше match
+            && mode_match
         {
             collected.push(log);
         }
@@ -108,9 +100,9 @@ pub fn read_log(input: Box<dyn MyReader>, mode: ReadMode, request_ids: Vec<u32>)
 mod test {
     use super::*;
 
-    const SOURCE1: &'static str = r#"System::Error NetworkError "url unknown" requestid=1"#;
+    const SOURCE1: &str = r#"System::Error NetworkError "url unknown" requestid=1"#;
 
-    const SOURCE: &'static str = r#"
+    const SOURCE: &str = r#"
 System::Error NetworkError "network interface is down" requestid=1
 App::Error SystemError "network" requestid=1
 System::Trace SendRequest "CreateUser{\"user_id\": 10, \"authrized_capital\": 1000,}" requestid=2

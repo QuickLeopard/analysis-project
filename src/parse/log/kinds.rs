@@ -1,6 +1,5 @@
 use crate::parse::combinators::basic::*;
 use crate::parse::combinators::choice::*;
-use crate::parse::combinators::list::*;
 use crate::parse::combinators::permutation::*;
 use crate::parse::primitives::stdp;
 use crate::parse::types::auth::AuthData;
@@ -391,7 +390,7 @@ impl Parsable for AppLogJournalKind {
                 ),
                 map(
                     preceded(strip_whitespace(tag("WithdrawCash")), UserCash::parser()),
-                    AppLogJournalKind::DepositCash,
+                    AppLogJournalKind::WithdrawCash,
                 ),
                 map(
                     preceded(strip_whitespace(tag("BuyAsset")), UserBacket::parser()),

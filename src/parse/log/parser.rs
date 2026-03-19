@@ -1,6 +1,5 @@
 use crate::parse::combinators::basic::*;
 use crate::parse::combinators::choice::*;
-use crate::parse::combinators::list::*;
 use crate::parse::log::kinds::*;
 use crate::parse::primitives::stdp;
 use crate::parse::traits::{Parsable, Parser};
@@ -37,7 +36,7 @@ pub struct LogLineParser {
 impl LogLineParser {
     pub fn parse<'a>(&self, input: &'a str) -> Result<(&'a str, LogLine), ()> {
         self.parser
-            .get_or_init(|| <LogLine as Parsable>::parser())
+            .get_or_init(<LogLine as Parsable>::parser)
             .parse(input)
     }
 }

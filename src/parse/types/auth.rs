@@ -1,4 +1,4 @@
-use crate::parse::combinators::list::*;
+use crate::parse::combinators::basic::*;
 use crate::parse::combinators::sequence::*;
 use crate::parse::primitives::stdp;
 use crate::traits::Parsable;

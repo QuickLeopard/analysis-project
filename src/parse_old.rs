@@ -1,5 +1,3 @@
-use crate::parse::traits::{Parsable, Parser};
-
 /// Конструкция 'либо-либо'
 enum Either<Left, Right> {
     Left(Left),

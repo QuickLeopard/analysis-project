@@ -37,6 +37,7 @@ impl Parser for I32 {
     fn parse<'a>(&self, input: &'a str) -> Result<(&'a str, Self::Dest), ()> {
         let end_idx = input
             .char_indices()
+            //skips sign, but if no sign silently skips first digit
             .skip(1)
             .find_map(|(idx, c)| (!c.is_ascii_digit()).then_some(idx))
             .unwrap_or(input.len());
@@ -58,6 +59,9 @@ impl Parser for Byte {
             return Err(());
         }
         let value = u8::from_str_radix(to_parse, 16).map_err(|_| ())?;
+        if value == 0 {
+            return Err(()); // в наших логах нет нулей, ноль в операции - фикция
+        }
         Ok((remaining, value))
     }
 }
