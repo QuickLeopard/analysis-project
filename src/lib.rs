@@ -1,5 +1,5 @@
-pub mod parse;
-use parse::*;
+pub mod parse_old;
+use parse_old::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReadMode {
@@ -18,7 +18,7 @@ impl<T: std::io::Read + std::fmt::Debug + Send + Sync + 'static> MyReader for T 
 #[derive(Debug)]
 struct LogIterator {
     lines: std::iter::Filter<
-        std::io::Lines<std::io::BufReader<Box<dyn MyReader>>>,//RefMutWrapper<'static, Box<dyn MyReader>>>>,
+        std::io::Lines<std::io::BufReader<Box<dyn MyReader>>>, //RefMutWrapper<'static, Box<dyn MyReader>>>>,
         fn(&Result<String, std::io::Error>) -> bool,
     >,
     //reader_rc: Box<dyn MyReader>,
@@ -32,7 +32,7 @@ impl LogIterator {
         // > но боюсь, что Rc протухнет - поэтому буду хранить и Rc и RefMut.
         // > Я знаю, что деструкторы полей структуры вызываются в
         // > порядке объявления в структуре - то есть сначала будет удалён
-        // > мой RefMutWrapper, а уже потом и весь исходный reader_rc      
+        // > мой RefMutWrapper, а уже потом и весь исходный reader_rc
         Self {
             lines: std::io::BufReader::with_capacity(4096, r)
                 .lines()
@@ -47,7 +47,7 @@ impl LogIterator {
     }
 }
 impl Iterator for LogIterator {
-    type Item = parse::LogLine;
+    type Item = parse_old::LogLine;
     fn next(&mut self) -> Option<Self::Item> {
         let line = self.lines.next()?.ok()?;
         let (remaining, result) = LOG_LINE_PARSER.parse(line.trim().to_string()).ok()?;
@@ -57,35 +57,28 @@ impl Iterator for LogIterator {
 
 // подсказка: RefCell вообще не нужен
 /// Принимает поток байт, отдаёт отфильтрованные и распарсенные логи
-pub fn read_log(
-    input: Box<dyn MyReader>,
-    mode: ReadMode,
-    request_ids: Vec<u32>,
-) -> Vec<LogLine> {
+pub fn read_log(input: Box<dyn MyReader>, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
     let logs = LogIterator::new(input);
     let mut collected = Vec::new();
     // подсказка: можно обойтись итераторами
     for log in logs {
-
         let mode_match = match mode {
             ReadMode::All => true,
             ReadMode::Errors => matches!(
-                    &log.kind,
-                    LogKind::System(
-                        SystemLogKind::Error(_)) | LogKind::App(AppLogKind::Error(_)
-                    )
-                ),
+                &log.kind,
+                LogKind::System(SystemLogKind::Error(_)) | LogKind::App(AppLogKind::Error(_))
+            ),
             ReadMode::Exchanges => matches!(
-                    &log.kind,
-                    LogKind::App(AppLogKind::Journal(
-                        AppLogJournalKind::BuyAsset(_)
+                &log.kind,
+                LogKind::App(AppLogKind::Journal(
+                    AppLogJournalKind::BuyAsset(_)
                         | AppLogJournalKind::SellAsset(_)
-                        | AppLogJournalKind::CreateUser{..}
-                        | AppLogJournalKind::RegisterAsset{..}
+                        | AppLogJournalKind::CreateUser { .. }
+                        | AppLogJournalKind::RegisterAsset { .. }
                         | AppLogJournalKind::DepositCash(_)
                         | AppLogJournalKind::WithdrawCash(_)
-                    ))
-                )
+                ))
+            ),
         };
 
         if request_ids.is_empty() || {
@@ -179,7 +172,10 @@ App::Journal BuyAsset UserBacket{"user_id":"Alice","backet":Backet{"asset_id":"m
 
     #[test]
     fn test_all() {
-        assert_eq!(read_log(Box::new(SOURCE1.as_bytes()), ReadMode::All, vec![]).len(), 1);      
+        assert_eq!(
+            read_log(Box::new(SOURCE1.as_bytes()), ReadMode::All, vec![]).len(),
+            1
+        );
         let all_parsed = read_log(Box::new(SOURCE.as_bytes()), ReadMode::All, vec![]);
         println!("all parsed:");
         all_parsed

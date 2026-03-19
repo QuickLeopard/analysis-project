@@ -83,16 +83,16 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use analysis::parse::{Announcements, UserBacket};
+    use analysis::parse_old::{Announcements, UserBacket};
 
-    use analysis::parse::*;
+    use analysis::parse_old::*;
 
     #[test]
     fn parse_test() {
         let parsing_demo =
             r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#
                 .to_string();
-        let announcements = just_parse_anouncements(parsing_demo).unwrap();
+        let announcements = just_parse(parsing_demo).unwrap();
         assert!(
             announcements
                 == (
