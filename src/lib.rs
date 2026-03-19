@@ -1,9 +1,9 @@
 pub mod parse_old;
 
 pub mod parse;
+use crate::parse::log::kinds::*;
+use crate::parse::log::parser::*;
 pub use parse::traits;
-
-use parse_old::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReadMode {
@@ -51,7 +51,7 @@ impl LogIterator {
     }
 }
 impl Iterator for LogIterator {
-    type Item = parse_old::LogLine;
+    type Item = LogLine;
     fn next(&mut self) -> Option<Self::Item> {
         let line = self.lines.next()?.ok()?;
         let (remaining, result) = LOG_LINE_PARSER.parse(line.trim()).ok()?;

@@ -1,3 +1,10 @@
+use crate::parse::combinators::basic::*;
+use crate::parse::combinators::choice::*;
+use crate::parse::combinators::list::*;
+use crate::parse::log::kinds::*;
+use crate::parse::primitives::stdp;
+use crate::parse::traits::{Parsable, Parser};
+
 /// Строка логов, [лог](AppLogKind) с `request_id`
 #[derive(Debug, Clone, PartialEq)]
 pub struct LogLine {
@@ -28,7 +35,7 @@ pub struct LogLineParser {
     parser: std::sync::OnceLock<<LogLine as Parsable>::Parser>,
 }
 impl LogLineParser {
-    pub fn parse(&self, input: String) -> Result<(String, LogLine), ()> {
+    pub fn parse<'a>(&self, input: &'a str) -> Result<(&'a str, LogLine), ()> {
         self.parser
             .get_or_init(|| <LogLine as Parsable>::parser())
             .parse(input)
@@ -40,3 +47,7 @@ impl LogLineParser {
 pub static LOG_LINE_PARSER: LogLineParser = LogLineParser {
     parser: std::sync::OnceLock::new(),
 };
+
+pub fn just_parse<T: Parsable>(input: &str) -> Result<(&str, T), ()> {
+    T::parser().parse(input)
+}

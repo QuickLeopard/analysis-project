@@ -86,9 +86,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
+    use analysis::parse::log::parser::just_parse;
     use analysis::parse::types::domain::*;
-
-    use analysis::parse_old::*;
 
     #[test]
     fn parse_test() {
