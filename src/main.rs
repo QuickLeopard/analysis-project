@@ -90,13 +90,12 @@ mod tests {
     #[test]
     fn parse_test() {
         let parsing_demo =
-            r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#
-                .to_string();
+            r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#;
         let announcements = just_parse(parsing_demo).unwrap();
         assert!(
             announcements
                 == (
-                    "".to_string(),
+                    "",
                     Announcements::from(vec![UserBackets {
                         user_id: "Bob".to_string(),
                         backets: vec![Backet {
