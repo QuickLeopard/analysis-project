@@ -59,9 +59,6 @@ impl Parser for Byte {
             return Err(());
         }
         let value = u8::from_str_radix(to_parse, 16).map_err(|_| ())?;
-        if value == 0 {
-            return Err(()); // в наших логах нет нулей, ноль в операции - фикция
-        }
         Ok((remaining, value))
     }
 }
