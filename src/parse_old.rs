@@ -609,6 +609,29 @@ where
         self.parser.2.parse(input.clone())
     }
 }
+
+fn alternative_n<Dest, A: Parser<Dest = Dest>>(alts: Vec<A>) -> Alt<Vec<A>>{
+    Alt {
+        parser: alts
+    }
+}
+
+impl<A, Dest> Parser for Alt<Vec<A>>
+where
+    A: Parser<Dest = Dest>
+{
+    type Dest = Dest;
+    fn parse(&self, input: String) -> Result<(String, Self::Dest), ()> {
+        self.parser.iter().find_map(|parser| parser.parse(input.clone()).ok()).ok_or(())
+        /*for parser in self.parser.iter() {
+            if let Ok(ok) = parser.parse(input.clone()) {
+                return Ok(ok);
+            }
+        }
+        Err(())*/
+    }
+}
+
 /// Конструктор [Alt] для трёх парсеров
 /// (в Rust нет чего-то, вроде variadic templates из C++)
 fn alt3<Dest, A0: Parser<Dest = Dest>, A1: Parser<Dest = Dest>, A2: Parser<Dest = Dest>>(
@@ -769,6 +792,7 @@ enum Either<Left, Right> {
 }
 
 /// Статус, которые можно парсить
+#[derive(PartialEq, Debug)]
 enum Status {
     Ok,
     Err(String),
@@ -1542,6 +1566,24 @@ mod test {
             strip_whitespace(stdp::U32).parse(" 42 answer".into()),
             Ok(("answer".into(), 42))
         );
+    }
+
+    #[test]
+    fn test_alt_n() {
+        let alt_n = alternative_n(vec![AsIs]);
+
+        assert_eq!(alt_n.parse("hello".into()), Ok(("".into(), "hello".into())));
+
+        fn to_ok(_: ()) -> Status {
+            Status::Ok
+        }
+        fn to_err(error: String) -> Status {
+            Status::Err(error)
+        }
+
+        let alt_n = alternative_n(vec![map (tag("Hello"), to_ok), map(tag("Bye"), to_ok)]);
+
+        assert_eq!(alt_n.parse("Hello World!".into()), Ok((" World!".into(), Status::Ok)));
     }
 
     #[test]
