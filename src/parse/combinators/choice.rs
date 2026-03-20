@@ -48,28 +48,26 @@ where
     }
 }
 
-pub fn alternative_from_n<Dest, A: Parser<Dest = Dest>>(alternatives: Vec<A>) -> Alt<Vec<A>> {
-    Alt {
-        parser: alternatives,
-    }
-}
+/// Alt for dynamic collection of different parser types
+pub type DynParsers<Dest> = Vec<Box<dyn Parser<Dest = Dest>>>;
 
-impl<A, Dest> Parser for Alt<Vec<A>>
-where
-    A: Parser<Dest = Dest>,
-{
+impl<Dest> Parser for Alt<DynParsers<Dest>> {
     type Dest = Dest;
+
     fn parse<'a>(&self, input: &'a str) -> Result<(&'a str, Self::Dest), ()> {
         self.parser
             .iter()
             .find_map(|parser| parser.parse(input).ok())
             .ok_or(())
-        /*for parser in self.parser.iter() {
-            if let Ok(ok) = parser.parse(input.clone()) {
-                return Ok(ok);
-            }
-        }
-        Err(())*/
+    }
+}
+
+/// Constructor for dynamic alternatives
+pub fn alternative_from_n<Dest>(
+    alternatives: Vec<Box<dyn Parser<Dest = Dest>>>,
+) -> Alt<DynParsers<Dest>> {
+    Alt {
+        parser: alternatives,
     }
 }
 

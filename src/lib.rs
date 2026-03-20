@@ -1,4 +1,8 @@
-pub mod parse_old;
+#[cfg(test)]
+mod original_tests;
+
+#[cfg(test)]
+mod new_tests;
 
 pub mod parse;
 use crate::parse::log::kinds::*;
@@ -12,33 +16,28 @@ pub enum ReadMode {
     Exchanges,
 }
 
-/// Для `Box<dyn много трейтов, помимо auto-трейтов>`, (`rustc E0225`)
-/// `only auto traits can be used as additional traits in a trait object`
-/// `consider creating a new trait with all of these as supertraits and using that trait here instead`
-pub trait MyReader: std::io::Read + std::fmt::Debug + Send + Sync + 'static {}
-impl<T: std::io::Read + std::fmt::Debug + Send + Sync + 'static> MyReader for T {}
+/// Конструкция 'либо-либо'
+enum Either<Left, Right> {
+    Left(Left),
+    Right(Right),
+}
+
+const BUFREADER_CAPACITY: usize = 4096;
+
+type LinesReader<R> = std::io::Lines<std::io::BufReader<R>>;
+type LineFilter<R> = std::iter::Filter<LinesReader<R>, fn(&Result<String, std::io::Error>) -> bool>;
+
 // подсказка: вместо trait-объекта можно дженерик
 /// Итератор, на выходе которого - строки распарсенной структуры данных
 #[derive(Debug)]
-struct LogIterator {
-    lines: std::iter::Filter<
-        std::io::Lines<std::io::BufReader<Box<dyn MyReader>>>, //RefMutWrapper<'static, Box<dyn MyReader>>>>,
-        fn(&Result<String, std::io::Error>) -> bool,
-    >,
-    //reader_rc: Box<dyn MyReader>,
+struct LogIterator<R: std::io::Read> {
+    lines: LineFilter<R>,
 }
-impl LogIterator {
-    fn new(r: Box<dyn MyReader>) -> Self {
+impl<R: std::io::Read> LogIterator<R> {
+    fn new(reader: R) -> Self {
         use std::io::BufRead;
-        // подсказка: unsafe избыточен, да и весь rc - тоже
-        // примечание автора прототипа:
-        // > Мотивация: хочу позаимствовать RefCell,
-        // > но боюсь, что Rc протухнет - поэтому буду хранить и Rc и RefMut.
-        // > Я знаю, что деструкторы полей структуры вызываются в
-        // > порядке объявления в структуре - то есть сначала будет удалён
-        // > мой RefMutWrapper, а уже потом и весь исходный reader_rc
         Self {
-            lines: std::io::BufReader::with_capacity(4096, r)
+            lines: std::io::BufReader::with_capacity(BUFREADER_CAPACITY, reader)
                 .lines()
                 .filter(|line_res| {
                     !line_res
@@ -50,7 +49,7 @@ impl LogIterator {
         }
     }
 }
-impl Iterator for LogIterator {
+impl<R: std::io::Read> Iterator for LogIterator<R> {
     type Item = LogLine;
     fn next(&mut self) -> Option<Self::Item> {
         let line = self.lines.next()?.ok()?;
@@ -59,9 +58,8 @@ impl Iterator for LogIterator {
     }
 }
 
-// подсказка: RefCell вообще не нужен
 /// Принимает поток байт, отдаёт отфильтрованные и распарсенные логи
-pub fn read_log(input: Box<dyn MyReader>, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
+pub fn read_log<R: std::io::Read>(input: R, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
     let logs = LogIterator::new(input);
     let mut collected = Vec::new();
     // подсказка: можно обойтись итераторами
@@ -168,11 +166,8 @@ App::Journal BuyAsset UserBacket{"user_id":"Alice","backet":Backet{"asset_id":"m
 
     #[test]
     fn test_all() {
-        assert_eq!(
-            read_log(Box::new(SOURCE1.as_bytes()), ReadMode::All, vec![]).len(),
-            1
-        );
-        let all_parsed = read_log(Box::new(SOURCE.as_bytes()), ReadMode::All, vec![]);
+        assert_eq!(read_log(SOURCE1.as_bytes(), ReadMode::All, vec![]).len(), 1);
+        let all_parsed = read_log(SOURCE.as_bytes(), ReadMode::All, vec![]);
         println!("all parsed:");
         all_parsed
             .iter()

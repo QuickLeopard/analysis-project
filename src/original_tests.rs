@@ -1,9 +1,3 @@
-/// Конструкция 'либо-либо'
-enum Either<Left, Right> {
-    Left(Left),
-    Right(Right),
-}
-
 #[cfg(test)]
 mod test {
 
@@ -105,25 +99,7 @@ mod test {
                 }
             ))
         );
-    }
-
-    #[test]
-    fn test_alt_n() {
-        let alt_n = alternative_from_n(vec![AsIs]);
-
-        assert_eq!(alt_n.parse("hello"), Ok(("", "hello".into())));
-
-        fn to_ok(_: ()) -> Status {
-            Status::Ok
-        }
-        fn to_err(error: String) -> Status {
-            Status::Err(error)
-        }
-
-        let alt_n = alternative_from_n(vec![map(tag("Hello"), to_ok), map(tag("Bye"), to_ok)]);
-
-        assert_eq!(alt_n.parse("Hello World!"), Ok((" World!", Status::Ok)));
-    }
+    }    
 
     #[test]
     fn test_delimited() {

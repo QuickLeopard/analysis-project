@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let file = File::open(filename)?;
 
-    let logs = analysis::read_log(Box::new(file), analysis::ReadMode::All, vec![]);
+    let logs = analysis::read_log(file, analysis::ReadMode::All, vec![]);
     let output = logs
         .iter()
         .map(|log| format!("{:?}", log))

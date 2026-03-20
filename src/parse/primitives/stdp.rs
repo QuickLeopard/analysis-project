@@ -1,4 +1,7 @@
 // parsers for std types
+
+use std::num::{NonZeroI32, NonZeroU32};
+
 use crate::parse::traits::Parser;
 
 /// Беззнаковые числа
@@ -23,9 +26,7 @@ impl Parser for U32 {
         // подсказка: вместо if можно использовать tight-тип std::num::NonZeroU32
         //            (ограничиться NonZeroU32::new(value).ok_or(()).get() - норм)
         //            или даже заиспользовать tightness
-        if value == 0 {
-            return Err(()); // в наших логах нет нулей, ноль в операции - фикция
-        }
+        let value = NonZeroU32::new(value).ok_or(())?.get();
         Ok((&remaining[end_idx..], value))
     }
 }
@@ -37,14 +38,11 @@ impl Parser for I32 {
     fn parse<'a>(&self, input: &'a str) -> Result<(&'a str, Self::Dest), ()> {
         let end_idx = input
             .char_indices()
-            //skips sign, but if no sign silently skips first digit
             .skip(1)
             .find_map(|(idx, c)| (!c.is_ascii_digit()).then_some(idx))
             .unwrap_or(input.len());
         let value = input[..end_idx].parse().map_err(|_| ())?;
-        if value == 0 {
-            return Err(()); // в наших логах нет нулей, ноль в операции - фикция
-        }
+        let value = NonZeroI32::new(value).ok_or(())?.get();
         Ok((&input[end_idx..], value))
     }
 }
