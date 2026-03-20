@@ -33,10 +33,6 @@ impl Parsable for LogLine {
     }
 }
 
-pub fn parse_log_line(input: &str) -> Result<(&str, LogLine), ()> {
-    LogLine::parser().parse(input)
-}
-
 /// Вспомогательная функция для быстрого парсинга любого [Parsable]-типа.
 pub fn just_parse<T: Parsable>(input: &str) -> Result<(&str, T), ()> {
     T::parser().parse(input)

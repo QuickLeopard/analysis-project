@@ -8,6 +8,7 @@ pub mod parse;
 
 use crate::parse::log::kinds::*;
 use crate::parse::log::parser::*;
+use crate::parse::traits::{Parsable, Parser};
 pub use parse::traits;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -38,6 +39,7 @@ type LineFilter<R> = std::iter::Filter<LinesReader<R>, fn(&Result<String, std::i
 #[derive(Debug)]
 struct LogIterator<R: std::io::Read> {
     lines: LineFilter<R>,
+    parser: <LogLine as Parsable>::Parser,
 }
 impl<R: std::io::Read> LogIterator<R> {
     fn new(reader: R) -> Self {
@@ -52,6 +54,7 @@ impl<R: std::io::Read> LogIterator<R> {
                         .map(|line| line.trim().is_empty())
                         .unwrap_or(false)
                 }),
+            parser: LogLine::parser(),
         }
     }
 }
@@ -59,7 +62,7 @@ impl<R: std::io::Read> Iterator for LogIterator<R> {
     type Item = LogLine;
     fn next(&mut self) -> Option<Self::Item> {
         let line = self.lines.next()?.ok()?;
-        let (remaining, result) = parse_log_line(line.trim()).ok()?;
+        let (remaining, result) = self.parser.parse(line.trim()).ok()?;
         remaining.trim().is_empty().then_some(result)
     }
 }

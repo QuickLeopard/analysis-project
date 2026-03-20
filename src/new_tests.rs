@@ -4,9 +4,9 @@ mod test {
     use crate::parse::combinators::choice::{alternative_from_n, key_value};
     use crate::parse::combinators::permutation::{permutation2, permutation3};
     use crate::parse::log::kinds::{AppLogKind, LogKind, SystemLogErrorKind, SystemLogKind};
-    use crate::parse::log::parser::{just_parse, parse_log_line};
+    use crate::parse::log::parser::{LogLine, just_parse};
     use crate::parse::primitives::stdp;
-    use crate::parse::traits::Parser;
+    use crate::parse::traits::{Parsable, Parser};
     use crate::parse::types::domain::{Announcements, Status};
     use crate::{ReadMode, read_log};
 
@@ -98,7 +98,7 @@ App::Journal DepositCash UserCash{"user_id":"Bob","count":10,} requestid=11
     #[test]
     fn test_log_line_parser_rejects_line_without_request_id() {
         let line = r#"System::Error NetworkError "network is down""#;
-        assert_eq!(parse_log_line(line), Err(()));
+        assert_eq!(LogLine::parser().parse(line), Err(()));
     }
 
     /// Проверяет обобщённый helper-парсер на вложенной доменной структуре.

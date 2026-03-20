@@ -2,6 +2,7 @@ use crate::parse::traits::Parser;
 
 /// Комбинатор для применения дочернего парсера N раз
 /// (аналог `take` из `nom`)
+#[derive(Debug)]
 pub struct Take<T> {
     count: usize,
     parser: T,
