@@ -8,7 +8,7 @@ name = "analysis"
 path = "src/lib.rs"
 
 [[bin]]
-name = "cli"
+name = "log-analysis-cli"
 path = "src/main.rs"
 
 [dependencies]

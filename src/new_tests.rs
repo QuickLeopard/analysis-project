@@ -13,7 +13,6 @@ mod test {
     use crate::parse::traits::{Parsable, Parser};
     use crate::parse::types::domain::*;
 
-
     #[test]
     fn test_alt_n() {
         let alt_n = alternative_from_n(vec![Box::new(AsIs)]);
@@ -40,14 +39,7 @@ mod test {
             hello_or_bye.parse("Bye World!"),
             Ok((" World!", Status::Ok))
         );
-        assert_eq!(
-            hello_or_bye.parse("Hllo World!"),
-            Err(())
-        );
-        assert_eq!(
-            hello_or_bye.parse("Byye World!"),
-            Err(())
-        );
+        assert_eq!(hello_or_bye.parse("Hllo World!"), Err(()));
+        assert_eq!(hello_or_bye.parse("Byye World!"), Err(()));
     }
-
 }

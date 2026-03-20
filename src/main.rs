@@ -52,17 +52,19 @@
 use std::error::Error;
 use std::fs::File;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    println!("Placeholder для экспериментов с cli");
+fn main() -> Result<(), Box<dyn Error>> {    
+    println!("Placeholder для экспериментов с log-analysis-cli");
 
     let args = std::env::args().collect::<Vec<_>>();
 
+    let program_name = args.first().ok_or("Empty args!")?;
+
     if args.len() < 2 {
-        println!("Usage: {} <filename>", args[0]);
+        eprintln!("Usage: {} <filename>", program_name);
         return Err("Not enough arguments".into());
     }
 
-    let filename = &args[1];
+    let filename = args.get(1).ok_or("Usage: program <filename>")?;
     let folder = std::env::current_dir()?;
 
     println!(
@@ -71,7 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         folder.to_string_lossy()
     );
 
-    let file = File::open(filename)?;
+    let file = File::open(filename).map_err(|e| format!("Failed to open '{}': {}", filename, e))?;
 
     let logs = analysis::read_log(file, analysis::ReadMode::All, vec![]);
     let output = logs
@@ -94,18 +96,18 @@ mod tests {
         let parsing_demo =
             r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#;
         let announcements = just_parse::<Announcements>(parsing_demo).unwrap();
-        assert!(
-            announcements
-                == (
-                    "",
-                    Announcements::from(vec![UserBackets {
-                        user_id: "Bob".to_string(),
-                        backets: vec![Backet {
-                            asset_id: "milk".to_string(),
-                            count: 3,
-                        }]
-                    }])
-                )
+        assert_eq!(
+            announcements,
+            (
+                "",
+                Announcements::from(vec![UserBackets {
+                    user_id: "Bob".to_string(),
+                    backets: vec![Backet {
+                        asset_id: "milk".to_string(),
+                        count: 3,
+                    }]
+                }])
+            )
         );
     }
 }
