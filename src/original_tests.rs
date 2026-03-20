@@ -7,7 +7,6 @@ mod test {
     use crate::parse::combinators::basic::*;
     use crate::parse::combinators::choice::*;
     use crate::parse::combinators::list::*;
-    use crate::parse::combinators::permutation::*;
     use crate::parse::log::kinds::*;
     use crate::parse::primitives::stdp;
     use crate::parse::traits::{Parsable, Parser};

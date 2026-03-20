@@ -39,7 +39,7 @@ pub static LOG_LINE_PARSER: LazyLock<<LogLine as Parsable>::Parser> =
 pub struct LogLineParser;
 
 impl LogLineParser {
-    pub fn parse<'a>(input: &'a str) -> Result<(&'a str, LogLine), ()> {
+    pub fn parse(input: &str) -> Result<(&str, LogLine), ()> {
         LOG_LINE_PARSER.parse(input)
     }
 }

@@ -18,6 +18,7 @@ pub enum ReadMode {
 }
 
 /// Конструкция 'либо-либо'
+#[allow(dead_code)]
 enum Either<Left, Right> {
     Left(Left),
     Right(Right),
@@ -59,40 +60,36 @@ impl<R: std::io::Read> Iterator for LogIterator<R> {
     }
 }
 
+fn match_mode(log: &LogLine, mode: ReadMode) -> bool {
+    match mode {
+        ReadMode::All => true,
+        ReadMode::Errors => matches!(
+            &log.kind,
+            LogKind::System(SystemLogKind::Error(_)) | LogKind::App(AppLogKind::Error(_))
+        ),
+        ReadMode::Exchanges => matches!(
+            &log.kind,
+            LogKind::App(AppLogKind::Journal(
+                AppLogJournalKind::BuyAsset(_)
+                    | AppLogJournalKind::SellAsset(_)
+                    | AppLogJournalKind::CreateUser { .. }
+                    | AppLogJournalKind::RegisterAsset { .. }
+                    | AppLogJournalKind::DepositCash(_)
+                    | AppLogJournalKind::WithdrawCash(_)
+            ))
+        ),
+    }
+}
+
 /// Принимает поток байт, отдаёт отфильтрованные и распарсенные логи
 pub fn read_log<R: std::io::Read>(input: R, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
     let logs = LogIterator::new(input);
-    let mut collected = Vec::new();
     // подсказка: можно обойтись итераторами
-    for log in logs {
-        let mode_match = match mode {
-            ReadMode::All => true,
-            ReadMode::Errors => matches!(
-                &log.kind,
-                LogKind::System(SystemLogKind::Error(_)) | LogKind::App(AppLogKind::Error(_))
-            ),
-            ReadMode::Exchanges => matches!(
-                &log.kind,
-                LogKind::App(AppLogKind::Journal(
-                    AppLogJournalKind::BuyAsset(_)
-                        | AppLogJournalKind::SellAsset(_)
-                        | AppLogJournalKind::CreateUser { .. }
-                        | AppLogJournalKind::RegisterAsset { .. }
-                        | AppLogJournalKind::DepositCash(_)
-                        | AppLogJournalKind::WithdrawCash(_)
-                ))
-            ),
-        };
-
-        if request_ids.is_empty()
-            || request_ids.contains(&log.request_id)
-            // подсказка: лучше match
-            && mode_match
-        {
-            collected.push(log);
-        }
-    }
-    collected
+    logs.filter_map(|log| {
+        (request_ids.is_empty() || request_ids.contains(&log.request_id) && match_mode(&log, mode))
+            .then_some(log)
+    })
+    .collect()
 }
 
 #[cfg(test)]
