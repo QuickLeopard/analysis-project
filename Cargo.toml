@@ -12,3 +12,4 @@ name = "log-analysis-cli"
 path = "src/main.rs"
 
 [dependencies]
+anyhow = "1"

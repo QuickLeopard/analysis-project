@@ -49,22 +49,22 @@
 //   --- нет сети
 //   --- отказано в доступе
 
-use std::error::Error;
-use std::fs::File;
+use anyhow::{Context, Result, bail};
 
-fn main() -> Result<(), Box<dyn Error>> {
+use std::fs::File;
+fn main() -> Result<()> {
     println!("Placeholder для экспериментов с log-analysis-cli");
 
     let args = std::env::args().collect::<Vec<_>>();
 
-    let program_name = args.first().ok_or("Empty args!")?;
+    let program_name = args.first().context("empty argv")?;
 
     if args.len() < 2 {
         eprintln!("Usage: {} <filename>", program_name);
-        return Err("Not enough arguments".into());
+        bail!("not enough arguments");
     }
 
-    let filename = args.get(1).ok_or("Usage: program <filename>")?;
+    let filename = args.get(1).context("usage: program <filename>")?;
     let folder = std::env::current_dir()?;
 
     println!(
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         folder.to_string_lossy()
     );
 
-    let file = File::open(filename).map_err(|e| format!("Failed to open '{}': {}", filename, e))?;
+    let file = File::open(filename).with_context(|| format!("failed to open '{}'", filename))?;
 
     let logs = analysis::read_log(file, analysis::ReadMode::All, vec![]);
     let output = logs
