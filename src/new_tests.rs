@@ -22,9 +22,6 @@ mod test {
         fn to_ok(_: ()) -> Status {
             Status::Ok
         }
-        fn to_err(error: String) -> Status {
-            Status::Err(error)
-        }
 
         let hello_or_bye = alternative_from_n(vec![
             Box::new(map(tag("Hello"), to_ok)),

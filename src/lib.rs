@@ -5,6 +5,7 @@ mod original_tests;
 mod new_tests;
 
 pub mod parse;
+
 use crate::parse::log::kinds::*;
 use crate::parse::log::parser::*;
 pub use parse::traits;
@@ -53,7 +54,7 @@ impl<R: std::io::Read> Iterator for LogIterator<R> {
     type Item = LogLine;
     fn next(&mut self) -> Option<Self::Item> {
         let line = self.lines.next()?.ok()?;
-        let (remaining, result) = LOG_LINE_PARSER.parse(line.trim()).ok()?;
+        let (remaining, result) = LogLineParser::parse(line.trim()).ok()?;
         remaining.trim().is_empty().then_some(result)
     }
 }

@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use crate::parse::combinators::basic::*;
 use crate::parse::combinators::choice::*;
 use crate::parse::log::kinds::*;
@@ -29,23 +31,18 @@ impl Parsable for LogLine {
     }
 }
 
-/// Парсер строки логов
-pub struct LogLineParser {
-    parser: std::sync::OnceLock<<LogLine as Parsable>::Parser>,
-}
+/// Глобальный парсер
+pub static LOG_LINE_PARSER: LazyLock<<LogLine as Parsable>::Parser> =
+    LazyLock::new(LogLine::parser);
+
+/// Парсер строки логов (wrapper for consistency)
+pub struct LogLineParser;
+
 impl LogLineParser {
-    pub fn parse<'a>(&self, input: &'a str) -> Result<(&'a str, LogLine), ()> {
-        self.parser
-            .get_or_init(<LogLine as Parsable>::parser)
-            .parse(input)
+    pub fn parse<'a>(input: &'a str) -> Result<(&'a str, LogLine), ()> {
+        LOG_LINE_PARSER.parse(input)
     }
 }
-// подсказка: singleton, без которого можно обойтись
-// парсеры не страшно вытащить в pub
-/// Единожды собранный парсер логов
-pub static LOG_LINE_PARSER: LogLineParser = LogLineParser {
-    parser: std::sync::OnceLock::new(),
-};
 
 pub fn just_parse<T: Parsable>(input: &str) -> Result<(&str, T), ()> {
     T::parser().parse(input)

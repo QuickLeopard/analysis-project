@@ -52,7 +52,7 @@
 use std::error::Error;
 use std::fs::File;
 
-fn main() -> Result<(), Box<dyn Error>> {    
+fn main() -> Result<(), Box<dyn Error>> {
     println!("Placeholder для экспериментов с log-analysis-cli");
 
     let args = std::env::args().collect::<Vec<_>>();
