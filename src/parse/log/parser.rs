@@ -1,5 +1,3 @@
-use std::sync::LazyLock;
-
 use crate::parse::combinators::basic::*;
 use crate::parse::combinators::choice::*;
 use crate::parse::log::kinds::*;
@@ -35,18 +33,8 @@ impl Parsable for LogLine {
     }
 }
 
-/// Ленивая глобальная инстанция парсера строки логов.
-pub static LOG_LINE_PARSER: LazyLock<<LogLine as Parsable>::Parser> =
-    LazyLock::new(LogLine::parser);
-
-/// Тонкая обёртка над [LOG_LINE_PARSER] для единообразного вызова.
-pub struct LogLineParser;
-
-impl LogLineParser {
-    /// Пытается распарсить одну строку лога.
-    pub fn parse(input: &str) -> Result<(&str, LogLine), ()> {
-        LOG_LINE_PARSER.parse(input)
-    }
+pub fn parse_log_line(input: &str) -> Result<(&str, LogLine), ()> {
+    LogLine::parser().parse(input)
 }
 
 /// Вспомогательная функция для быстрого парсинга любого [Parsable]-типа.

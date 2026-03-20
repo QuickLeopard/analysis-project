@@ -59,7 +59,7 @@ impl<R: std::io::Read> Iterator for LogIterator<R> {
     type Item = LogLine;
     fn next(&mut self) -> Option<Self::Item> {
         let line = self.lines.next()?.ok()?;
-        let (remaining, result) = LogLineParser::parse(line.trim()).ok()?;
+        let (remaining, result) = parse_log_line(line.trim()).ok()?;
         remaining.trim().is_empty().then_some(result)
     }
 }
