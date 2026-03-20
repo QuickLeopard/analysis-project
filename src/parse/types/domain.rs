@@ -8,8 +8,9 @@ use crate::traits::Parsable;
 /// Пара 'сокращённое название предмета' - 'его описание'
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssetDsc {
-    // `dsc` aka `description`
+    /// Короткий идентификатор актива.
     pub id: String,
+    /// Человекочитаемое описание актива.
     pub dsc: String,
 }
 impl Parsable for AssetDsc {
@@ -39,7 +40,9 @@ impl Parsable for AssetDsc {
 /// Сведение о предмете в некотором количестве
 #[derive(Debug, Clone, PartialEq)]
 pub struct Backet {
+    /// Идентификатор актива.
     pub asset_id: String,
+    /// Количество единиц актива.
     pub count: u32,
 }
 impl Parsable for Backet {
@@ -68,7 +71,9 @@ impl Parsable for Backet {
 /// Фиатные деньги конкретного пользователя
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserCash {
+    /// Идентификатор пользователя.
     pub user_id: String,
+    /// Количество денег.
     pub count: u32,
 }
 impl Parsable for UserCash {
@@ -100,7 +105,9 @@ impl Parsable for UserCash {
 /// [Backet] конкретного пользователя
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserBacket {
+    /// Идентификатор пользователя.
     pub user_id: String,
+    /// Позиция пользователя по одному активу.
     pub backet: Backet,
 }
 impl Parsable for UserBacket {
@@ -132,7 +139,9 @@ impl Parsable for UserBacket {
 /// [Бакеты](Backet) конкретного пользователя
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserBackets {
+    /// Идентификатор пользователя.
     pub user_id: String,
+    /// Все позиции пользователя по активам.
     pub backets: Vec<Backet>,
 }
 impl Parsable for UserBackets {
@@ -164,7 +173,7 @@ impl Parsable for UserBackets {
         )
     }
 }
-/// Список опубликованных бакетов
+/// Список опубликованных позиций пользователей.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Announcements(Vec<UserBackets>);
 impl Parsable for Announcements {
@@ -182,10 +191,12 @@ impl From<Vec<UserBackets>> for Announcements {
         Announcements(vec)
     }
 }
-/// Статус, которые можно парсить
+/// Статус операции, встречающийся в логах.
 #[derive(PartialEq, Debug)]
 pub enum Status {
+    /// Операция завершена успешно.
     Ok,
+    /// Операция завершилась ошибкой с текстом причины.
     Err(String),
 }
 impl Parsable for Status {

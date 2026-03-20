@@ -11,9 +11,13 @@ use crate::parse::log::parser::*;
 pub use parse::traits;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Режим фильтрации выходного потока логов в [read_log].
 pub enum ReadMode {
+    /// Вернуть все корректно распарсенные логи.
     All,
+    /// Вернуть только ошибки системы и приложения.
     Errors,
+    /// Вернуть только бизнес-события обмена из журнала приложения.
     Exchanges,
 }
 
@@ -60,6 +64,7 @@ impl<R: std::io::Read> Iterator for LogIterator<R> {
     }
 }
 
+/// Проверяет, подходит ли запись под выбранный [ReadMode].
 fn match_mode(log: &LogLine, mode: ReadMode) -> bool {
     match mode {
         ReadMode::All => true,
@@ -81,13 +86,18 @@ fn match_mode(log: &LogLine, mode: ReadMode) -> bool {
     }
 }
 
-/// Принимает поток байт, отдаёт отфильтрованные и распарсенные логи
+/// Читает поток, парсит строки логов и применяет фильтры.
+///
+/// Запись попадает в результат, если одновременно:
+/// - проходит фильтр по `request_id` (список пустой или `request_id` входит в список);
+/// - соответствует выбранному [ReadMode].
 pub fn read_log<R: std::io::Read>(input: R, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
     let logs = LogIterator::new(input);
     // подсказка: можно обойтись итераторами
     logs.filter_map(|log| {
-        (request_ids.is_empty() || request_ids.contains(&log.request_id) && match_mode(&log, mode))
-            .then_some(log)
+        ((request_ids.is_empty() || request_ids.contains(&log.request_id))
+            && match_mode(&log, mode))
+        .then_some(log)
     })
     .collect()
 }

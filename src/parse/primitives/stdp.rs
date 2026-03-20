@@ -4,7 +4,10 @@ use std::num::{NonZeroI32, NonZeroU32};
 
 use crate::parse::traits::Parser;
 
-/// Беззнаковые числа
+/// Парсер положительных `u32`.
+///
+/// Поддерживает десятичный формат и шестнадцатеричный с префиксом `0x`.
+/// Нулевое значение отклоняется.
 #[derive(Debug)]
 pub struct U32;
 impl Parser for U32 {
@@ -30,7 +33,7 @@ impl Parser for U32 {
         Ok((&remaining[end_idx..], value))
     }
 }
-/// Знаковые числа
+/// Парсер ненулевых `i32` в десятичном формате.
 #[derive(Debug)]
 pub struct I32;
 impl Parser for I32 {
@@ -46,7 +49,7 @@ impl Parser for I32 {
         Ok((&input[end_idx..], value))
     }
 }
-/// Шестнадцатеричные байты (пригодится при парсинге блобов)
+/// Парсер одного байта, закодированного двумя hex-символами.
 #[derive(Debug, Clone)]
 pub struct Byte;
 impl Parser for Byte {

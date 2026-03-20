@@ -6,7 +6,7 @@ use crate::traits::Parsable;
 const AUTHDATA_SIZE: usize = 1024;
 
 // подсказка: довольно много места на стэке
-/// Данные для авторизации
+/// Данные для авторизации фиксированной длины в 1024 байта.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AuthData(pub [u8; AUTHDATA_SIZE]);
 impl Parsable for AuthData {

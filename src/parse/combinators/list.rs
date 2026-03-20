@@ -31,7 +31,7 @@ impl<T: Parser> Parser for List<T> {
         Err(()) // строка кончилась, не закрыв скобку
     }
 }
-/// Конструктор для [List]
+/// Создаёт парсер списка, где элементы разбираются через `parser`.
 pub fn list<T: Parser>(parser: T) -> List<T> {
     List { parser }
 }

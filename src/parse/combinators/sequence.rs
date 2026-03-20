@@ -19,7 +19,7 @@ impl<T: Parser> Parser for Take<T> {
         Ok((remaining, result))
     }
 }
-/// Конструктор `Take`
+/// Создаёт комбинатор, который применяет `parser` ровно `count` раз подряд.
 pub fn take<T: Parser>(count: usize, parser: T) -> Take<T> {
     Take { count, parser }
 }

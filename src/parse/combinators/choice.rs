@@ -158,6 +158,9 @@ where
         self.parser.7.parse(input)
     }
 }
+pub type Alt8Tuple<A0, A1, A2, A3, A4, A5, A6, A7> = (A0, A1, A2, A3, A4, A5, A6, A7);
+pub type Alt8Result<A0, A1, A2, A3, A4, A5, A6, A7> =
+    Alt<Alt8Tuple<A0, A1, A2, A3, A4, A5, A6, A7>>;
 /// Конструктор [Alt] для восьми парсеров
 /// (в Rust нет чего-то, вроде variadic templates из C++)
 pub fn alt8<
@@ -171,18 +174,9 @@ pub fn alt8<
     A6: Parser<Dest = Dest>,
     A7: Parser<Dest = Dest>,
 >(
-    a0: A0,
-    a1: A1,
-    a2: A2,
-    a3: A3,
-    a4: A4,
-    a5: A5,
-    a6: A6,
-    a7: A7,
-) -> Alt<(A0, A1, A2, A3, A4, A5, A6, A7)> {
-    Alt {
-        parser: (a0, a1, a2, a3, a4, a5, a6, a7),
-    }
+    parsers: Alt8Tuple<A0, A1, A2, A3, A4, A5, A6, A7>,
+) -> Alt8Result<A0, A1, A2, A3, A4, A5, A6, A7> {
+    Alt { parser: parsers }
 }
 /// Комбинатор, который требует, чтобы все дочерние парсеры отработали,
 /// (аналог `all` из `nom`)
@@ -268,12 +262,10 @@ pub fn all4<A0: Parser, A1: Parser, A2: Parser, A3: Parser>(
 /// простое '"ключ":значение' читаться не будет
 #[derive(Debug, Clone)]
 pub struct KeyValue<T> {
-    parser: Delimited<
-        All<(StripWhitespace<QuotedTag>, StripWhitespace<Tag>)>,
-        StripWhitespace<T>,
-        StripWhitespace<Tag>,
-    >,
+    parser: KeyValueParser<T>,
 }
+type KeyValuePrefix = All<(StripWhitespace<QuotedTag>, StripWhitespace<Tag>)>;
+type KeyValueParser<T> = Delimited<KeyValuePrefix, StripWhitespace<T>, StripWhitespace<Tag>>;
 impl<T> Parser for KeyValue<T>
 where
     T: Parser,

@@ -9,71 +9,104 @@ use crate::traits::Parsable;
 /// Все виды логов
 #[derive(Debug, Clone, PartialEq)]
 pub enum LogKind {
+    /// Лог, порождённый инфраструктурной/системной частью.
     System(SystemLogKind),
+    /// Лог, порождённый прикладной бизнес-логикой.
     App(AppLogKind),
 }
 /// Все виды [системных](LogKind) логов
 #[derive(Debug, Clone, PartialEq)]
 pub enum SystemLogKind {
+    /// Ошибка системного уровня.
     Error(SystemLogErrorKind),
+    /// Трассировочное системное событие.
     Trace(SystemLogTraceKind),
 }
 /// Trace [системы](SystemLogKind)
 #[derive(Debug, Clone, PartialEq)]
 pub enum SystemLogTraceKind {
+    /// Отправка запроса во внешнюю систему.
     SendRequest(String),
+    /// Получение ответа от внешней системы.
     GetResponse(String),
 }
 /// Error [системы](SystemLogKind)
 #[derive(Debug, Clone, PartialEq)]
 pub enum SystemLogErrorKind {
+    /// Ошибка сетевого взаимодействия.
     NetworkError(String),
+    /// Отказ в доступе/авторизации.
     AccessDenied(String),
 }
 /// Все виды [логов приложения](LogKind) логов
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppLogKind {
+    /// Ошибка прикладной логики.
     Error(AppLogErrorKind),
+    /// Трассировочное прикладное событие.
     Trace(AppLogTraceKind),
+    /// Бизнес-событие в человекочитаемой форме.
     Journal(AppLogJournalKind),
 }
 /// Error [приложения](AppLogKind)
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppLogErrorKind {
+    /// Недостаток ресурса/актива для выполнения операции.
     LackOf(String),
+    /// Ошибка, прокинутая из системного слоя.
     SystemError(String),
 }
 // подсказка: а поля не слишком много места на стэке занимают?
 /// Trace [приложения](AppLogKind)
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppLogTraceKind {
+    /// Установка соединения с передачей бинарных auth-данных.
     Connect(Box<AuthData>),
+    /// Исходящий прикладной запрос.
     SendRequest(String),
+    /// Локальная проверка данных/объявлений.
     Check(Box<Announcements>),
+    /// Полученный прикладной ответ.
     GetResponse(String),
 }
 /// Журнал [приложения](AppLogKind), самые высокоуровневые события
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppLogJournalKind {
+    /// Создание пользователя.
     CreateUser {
+        /// Идентификатор пользователя.
         user_id: String,
+        /// Стартовый капитал пользователя.
         authorized_capital: u32,
     },
+    /// Удаление пользователя.
     DeleteUser {
+        /// Идентификатор пользователя.
         user_id: String,
     },
+    /// Регистрация актива у пользователя.
     RegisterAsset {
+        /// Идентификатор актива.
         asset_id: String,
+        /// Идентификатор владельца/регистратора.
         user_id: String,
+        /// Начальная ликвидность актива.
         liquidity: u32,
     },
+    /// Снятие регистрации актива.
     UnregisterAsset {
+        /// Идентификатор актива.
         asset_id: String,
+        /// Идентификатор владельца.
         user_id: String,
     },
+    /// Пополнение денежных средств пользователя.
     DepositCash(UserCash),
+    /// Списание денежных средств пользователя.
     WithdrawCash(UserCash),
+    /// Покупка актива.
     BuyAsset(UserBacket),
+    /// Продажа актива.
     SellAsset(UserBacket),
 }
 impl Parsable for SystemLogErrorKind {
@@ -326,7 +359,7 @@ impl Parsable for AppLogJournalKind {
     fn parser() -> Self::Parser {
         preceded(
             tag("Journal"),
-            alt8(
+            alt8((
                 map(
                     preceded(
                         strip_whitespace(tag("CreateUser")),
@@ -400,7 +433,7 @@ impl Parsable for AppLogJournalKind {
                     preceded(strip_whitespace(tag("SellAsset")), UserBacket::parser()),
                     AppLogJournalKind::SellAsset,
                 ),
-            ),
+            )),
         )
     }
 }

@@ -6,10 +6,14 @@ use crate::parse::log::kinds::*;
 use crate::parse::primitives::stdp;
 use crate::parse::traits::{Parsable, Parser};
 
-/// Строка логов, [лог](AppLogKind) с `request_id`
+/// Полностью распарсенная строка лога.
+///
+/// Формат: `<LogKind> requestid=<u32>`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LogLine {
+    /// Содержимое и тип события.
     pub kind: LogKind,
+    /// Идентификатор запроса, связывающий события между собой.
     pub request_id: u32,
 }
 impl Parsable for LogLine {
@@ -31,19 +35,21 @@ impl Parsable for LogLine {
     }
 }
 
-/// Глобальный парсер
+/// Ленивая глобальная инстанция парсера строки логов.
 pub static LOG_LINE_PARSER: LazyLock<<LogLine as Parsable>::Parser> =
     LazyLock::new(LogLine::parser);
 
-/// Парсер строки логов (wrapper for consistency)
+/// Тонкая обёртка над [LOG_LINE_PARSER] для единообразного вызова.
 pub struct LogLineParser;
 
 impl LogLineParser {
+    /// Пытается распарсить одну строку лога.
     pub fn parse(input: &str) -> Result<(&str, LogLine), ()> {
         LOG_LINE_PARSER.parse(input)
     }
 }
 
+/// Вспомогательная функция для быстрого парсинга любого [Parsable]-типа.
 pub fn just_parse<T: Parsable>(input: &str) -> Result<(&str, T), ()> {
     T::parser().parse(input)
 }
